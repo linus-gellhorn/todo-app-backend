@@ -8,6 +8,7 @@ import {
   getDbItemById,
   DbItem,
   updateDbItemById,
+  deleteDbItemById,
 } from "./db";
 import filePath from "./filePath";
 
@@ -36,8 +37,8 @@ app.get("/", (req, res) => {
 
 // GET /items
 app.get("/items", (req, res) => {
-  const allSignatures = getAllDbItems();
-  res.status(200).json(allSignatures);
+  const allTodos = getAllDbItems();
+  res.status(200).json(allTodos);
 });
 
 // POST /items
@@ -45,37 +46,37 @@ app.post<{}, {}, DbItem>("/items", (req, res) => {
   // to be rigorous, ought to handle non-conforming request bodies
   // ... but omitting this as a simplification
   const postData = req.body;
-  const createdSignature = addDbItem(postData);
-  res.status(201).json(createdSignature);
+  const createdTodo = addDbItem(postData);
+  res.status(201).json(createdTodo);
 });
 
 // GET /items/:id
 app.get<{ id: string }>("/items/:id", (req, res) => {
-  const matchingSignature = getDbItemById(parseInt(req.params.id));
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
+  const matchingTodo = getDbItemById(parseInt(req.params.id));
+  if (matchingTodo === "not found") {
+    res.status(404).json(matchingTodo);
   } else {
-    res.status(200).json(matchingSignature);
+    res.status(200).json(matchingTodo);
   }
 });
 
 // DELETE /items/:id
 app.delete<{ id: string }>("/items/:id", (req, res) => {
-  const matchingSignature = getDbItemById(parseInt(req.params.id));
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
+  const matchingTodo = deleteDbItemById(parseInt(req.params.id));
+  if (matchingTodo === "not found") {
+    res.status(404).json(matchingTodo);
   } else {
-    res.status(200).json(matchingSignature);
+    res.status(200).json(matchingTodo);
   }
 });
 
 // PATCH /items/:id
 app.patch<{ id: string }, {}, Partial<DbItem>>("/items/:id", (req, res) => {
-  const matchingSignature = updateDbItemById(parseInt(req.params.id), req.body);
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
+  const matchingTodo = updateDbItemById(parseInt(req.params.id), req.body);
+  if (matchingTodo === "not found") {
+    res.status(404).json(matchingTodo);
   } else {
-    res.status(200).json(matchingSignature);
+    res.status(200).json(matchingTodo);
   }
 });
 
