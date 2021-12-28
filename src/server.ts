@@ -105,23 +105,47 @@ app.delete("/todos/:id", async (req, res) => {
 
 // Update a todo
 app.patch("/todos/:id", async (req, res) => {
-  const { description } = req.body;
+  const { description, completed } = req.body;
   const id = parseInt(req.params.id);
-  const updateTodo = await client.query(
-    "UPDATE todo SET description = $1 WHERE id = $2 RETURNING *",
-    [description, id]
-  );
-  const updatedTodo = updateTodo.rows[0];
-  if (updatedTodo) {
-    res.status(200).json({
-      status: "success",
-      newTodo: updatedTodo,
-    });
-  } else {
-    res.status(404).json({
-      status: "failure",
-      message: "Could not find that to-do to update",
-    });
+
+  // edit description
+  if (description) {
+    const updateTodo = await client.query(
+      "UPDATE todo SET description = $1 WHERE id = $2 RETURNING *",
+      [description, id]
+    );
+    const updatedTodo = updateTodo.rows[0];
+    if (updatedTodo) {
+      res.status(200).json({
+        status: "success",
+        newTodo: updatedTodo,
+      });
+    } else {
+      res.status(404).json({
+        status: "failure",
+        message: "Could not find that to-do to update",
+      });
+    }
+  }
+
+  // edit completion status
+  if (typeof completed === "boolean") {
+    const updateTodo = await client.query(
+      "UPDATE todo SET completed = $1 WHERE id = $2 RETURNING *",
+      [completed, id]
+    );
+    const updatedTodo = updateTodo.rows[0];
+    if (updatedTodo) {
+      res.status(200).json({
+        status: "success",
+        newTodo: updatedTodo,
+      });
+    } else {
+      res.status(404).json({
+        status: "failure",
+        message: "Could not find that to-do to update",
+      });
+    }
   }
 });
 
