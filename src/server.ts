@@ -29,29 +29,34 @@ app.get("/", (req, res) => {
 
 // Get all todos
 app.get("/todos", async (req, res) => {
-  try {
-    const allTodos = await client.query("SELECT * FROM todo");
-    res.status(200).json({
-      status: "success",
-      todos: allTodos.rows,
-    });
-  } catch (err) {
-    console.error(err);
-  }
+  const allTodos = await client.query(
+    "SELECT * FROM todo ORDER BY creation_date"
+  );
+  res.status(200).json({
+    status: "success",
+    todos: allTodos.rows,
+  });
 });
 
 // Post a todo
 app.post("/todos", async (req, res) => {
   const { description } = req.body;
   if (typeof description === "string") {
-    const newTodo = await client.query(
-      "INSERT INTO todo (description) VALUES ($1) RETURNING *",
-      [description]
-    );
-    res.status(201).json({
-      status: "success",
-      newTodo: newTodo.rows[0],
-    });
+    if (description.length > 0) {
+      const newTodo = await client.query(
+        "INSERT INTO todo (description) VALUES ($1) RETURNING *",
+        [description]
+      );
+      res.status(201).json({
+        status: "success",
+        newTodo: newTodo.rows[0],
+      });
+    } else {
+      res.status(400).json({
+        status: "failure",
+        message: "A to-do must not be empty",
+      });
+    }
   } else {
     res.status(400).json({
       status: "failure",
@@ -86,7 +91,10 @@ app.delete("/todos/:id", async (req, res) => {
   );
   const deletedTodo = deleteTodo.rows[0];
   if (deletedTodo) {
-    res.status(200).json(deletedTodo);
+    res.status(200).json({
+      status: "success",
+      deleted: deletedTodo,
+    });
   } else {
     res.status(404).json({
       status: "failure",
@@ -105,7 +113,10 @@ app.patch("/todos/:id", async (req, res) => {
   );
   const updatedTodo = updateTodo.rows[0];
   if (updatedTodo) {
-    res.status(200).json(updatedTodo);
+    res.status(200).json({
+      status: "success",
+      newTodo: updatedTodo,
+    });
   } else {
     res.status(404).json({
       status: "failure",
