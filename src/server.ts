@@ -1,25 +1,31 @@
 import express from "express";
 import cors from "cors";
 import { Client } from "pg";
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import filePath from "./filePath";
 
-const client = new Client({ database: "todoApp" });
+config(); //Read .env file lines as though they were env vars.
 
-client.connect();
+//Call this script with the environment variable LOCAL set if you want to connect to a local db (i.e. without SSL)
+//Do not set the environment variable LOCAL if you want to connect to a heroku DB.
+
+//For the ssl property of the DB connection config, use a value of...
+// false - when connecting to a local DB
+// { rejectUnauthorized: false } - when connecting to a heroku DB
+const herokuSSLSetting = { rejectUnauthorized: false };
+const sslSetting = process.env.LOCAL ? false : herokuSSLSetting;
+const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: sslSetting,
+};
 
 const app = express();
 
-/** Parses JSON data in a request automatically */
-app.use(express.json());
-/** To allow 'Cross-Origin Resource Sharing': https://en.wikipedia.org/wiki/Cross-origin_resource_sharing */
-app.use(cors());
+app.use(express.json()); //add body parser to each following route handler
+app.use(cors()); //add CORS support to each following route handler
 
-// read in contents of any environment variables in the .env file
-dotenv.config();
-
-// use the environment variable PORT, or 4000 as a fallback
-const PORT_NUMBER = process.env.PORT ?? 4000;
+const client = new Client(dbConfig);
+client.connect();
 
 // API info page
 app.get("/", (req, res) => {
@@ -149,6 +155,11 @@ app.patch("/todos/:id", async (req, res) => {
   }
 });
 
-app.listen(PORT_NUMBER, () => {
-  console.log(`Server is listening on port ${PORT_NUMBER}!`);
+//Start the server on the given port
+const port = process.env.PORT;
+if (!port) {
+  throw "Missing PORT environment variable.  Set it in .env file.";
+}
+app.listen(port, () => {
+  console.log(`Server is up and running on port ${port}`);
 });
